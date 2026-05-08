@@ -1,0 +1,37 @@
+#include "BMP280.h"     //Inclue o objeto sensor
+#include "../config.h"  //Busca as configurações do hardware
+#include <Arduino.h>
+
+//Função inicializadora do sensor
+bool BMP280::init() {
+    //Verifica se o endereço do sensor foi encontrado
+    if (!_sensor.begin(BMP280_ADDR)) {
+        return false;
+    }
+    //Define a configuração inicial do sensor (Standart)
+    _sensor.setSampling(
+        Adafruit_BMP280::MODE_NORMAL,
+        Adafruit_BMP280::SAMPLING_X2,   // temperatura
+        Adafruit_BMP280::SAMPLING_X16,  // pressão
+        Adafruit_BMP280::FILTER_X16,
+        Adafruit_BMP280::STANDBY_MS_1
+    );
+
+    // Média de amostras para pressão de referência do solo
+    float sum = 0;
+    for (int i = 0; i < BMP280_CALIBRATION_SAMPLES; i++) {
+        sum += _sensor.readPressure();
+        delay(10);
+    }
+    _referencePressure = sum / BMP280_CALIBRATION_SAMPLES;
+    //Retorna que o sensor foi inicializado corretamente
+    return true;
+}
+//Função para ler e armazenar os dados no FlightData
+bool BMP280::read(FlightData& data) {
+    data.pressure    = _sensor.readPressure();
+    data.temperature = _sensor.readTemperature();
+    // Altitude relativa ao ponto de lançamento
+    data.altitude    = 44330.0f * (1.0f - pow(data.pressure / _referencePressure, 0.1903f));
+    return true;
+}
