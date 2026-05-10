@@ -6,7 +6,6 @@
 \*****************************************************/
 
 #include "bmp280/BMP280.cpp"
-#include "processing/DataPrint.cpp"
 #include "mpu6500/MPU6500.cpp"
 #include "sdcard/SDCard.cpp"
 #include "gps/GYGPS.cpp"
@@ -15,4 +14,7 @@
 // #include "processing/DataProcessor.cpp"
 // #include "processing/ApogeeDetector.cpp"
 #include "telemetry/LoRa.cpp"
+
+#include "processing/DataPrint.cpp"
+//#include "processing/SystemMonitor.cpp"
 // #include "state/StateMachine.cpp"

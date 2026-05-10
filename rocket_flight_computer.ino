@@ -10,10 +10,11 @@
 #include "config.h"
 #include "bmp280/BMP280.h"
 #include "mpu6500/MPU6500.h"
-#include "processing/DataPrint.h"
 #include "sdcard/SDCard.h"
 #include "gps/GYGPS.h"
-#include "telemetry/LoRa.h"
+#include "processing/DataPrint.h"
+#include "processing/SystemMonitor.h"
+//#include "telemetry/LoRa.h"
 
 //Cria objetos para os drivers (Sensores)
 BMP280     bmp280;  //Barometro
@@ -25,6 +26,7 @@ SDCARD sd;
 LORAMODULE lora;
 //Cria objetos para arquivos de processamento
 DataPrint  dataPrint(Serial);
+//SystemMonitor monitor;
 //Cria objeto para o arquivo de dados de voo
 FlightData flightData;
 // Mutex compartilhado entre SD e LoRa para proteger o barramento SPI.
@@ -93,22 +95,23 @@ void loop() {
     flightData.timestamp = cycleStart;
 
     //Le todos os sensores
-    bmp280.read(flightData);
-    mpu6500.read(flightData);
-
-    while(Serial2.available()>0)
+    bool bmp_status = bmp280.read(flightData);
+    bool mpu_status = mpu6500.read(flightData);    
+    while(Serial2.available()>0){
         gygps.feed(Serial2.read());
+    }
     gygps.read(flightData);
 
     // dataProcessor.run(flightData);
     // stateMachine.update(flightData);
 
     //Registra os dados e envia-os via LoRa
-    sd.log(flightData);
+    bool sd_status = sd.log(flightData);
     lora.update(flightData);
 
     //Essa linha é para debugar o sistema, em modo de operação ela deve estar comentada
     //dataPrint.printFlightData(flightData);
+    //monitor.update(flightData, bmp_status, mpu_status, 1, sd_status, 1);
 
     //Padroniza o tempo de loop, para que todos sensores tenham a mesma quantidade de leituras
     uint32_t elapsed = millis() - cycleStart;
