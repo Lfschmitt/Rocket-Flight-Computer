@@ -42,3 +42,10 @@
 // Loop principal
 #define LOOP_RATE_HZ   100           //Default 100Hz
 #define LOOP_PERIOD_MS (1000 / LOOP_RATE_HZ)
+
+//Definição do bit de cada sistema
+#define SYS_BMP   0x01
+#define SYS_MPU   0x02
+#define SYS_GPS   0x04
+#define SYS_SD    0x08
+#define SYS_LORA  0x10

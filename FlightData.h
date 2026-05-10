@@ -35,4 +35,7 @@ struct FlightData {
     // Dados processado (DataProcessor)
     float verticalVelocity;   // m/s
     float verticalAccel;      // m/s²
+
+    //Status de cada sistema
+    uint8_t systemStatus;
 };

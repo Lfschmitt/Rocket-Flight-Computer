@@ -38,12 +38,12 @@ void setup() {
     //Inicialização do sensor BMP280(Barômetro)
     if (!bmp280.init()) { 
         Serial.println("[ERROR] BMP280 init failed"); 
-        while (true); //Trava o programa
+        //while (true); //Trava o programa
     }else{Serial.println("[OK] BMP280 initialized");}
     //Inicialização do sensor MPU6500(Acelerometro)
     if (!mpu6500.init()) {
         Serial.println("[ERROR] MPU6500 init failed");
-        while (true); //Trava o programa
+        //while (true); //Trava o programa
     }else{Serial.println("[OK] MPU6500 initialized");}
     
     // Inicializa o barramento SPI uma única vez antes de qualquer módulo SPI.
@@ -61,10 +61,12 @@ void setup() {
     //Inicialização do cartão SD
     if (!sd.init(spiMutex)) {
         Serial.println("[ERROR] SDCard init failed");
-    //    while (true); //Trava o programa
+        //while (true); //Trava o programa
     }else{Serial.println("[OK] SDCard initialized");}
     delay(100);
 
+    // Mantém o CS do SD em HIGH enquanto o LORA inicializa,
+    // evitando que o LoRa interfira no barramento SPI durante SD.begin()
     pinMode(PIN_SD_CS, OUTPUT);
     digitalWrite(PIN_SD_CS, HIGH);
     //Inicialização do módulo LoRa
@@ -73,11 +75,13 @@ void setup() {
         Serial.println(lora.getLastError());
         //while (true);
     }else{Serial.println("[OK] LoRa initialized");}
+
     //Inicialização do GYGPS
     if (!gygps.init(Serial2)) {
         Serial.println("[ERROR] GPS init failed");
-        while (true); //Trava o programa
+        //while (true); //Trava o programa
     }else{Serial.println("[OK] GPS initialized");}
+
     //Tudo certo para prosseguir o sistema
     Serial.println("[OK] Flight computer ready");
     delay(1000);
@@ -91,16 +95,20 @@ void loop() {
     //Le todos os sensores
     bmp280.read(flightData);
     mpu6500.read(flightData);
+
     while(Serial2.available()>0)
         gygps.feed(Serial2.read());
     gygps.read(flightData);
+
     // dataProcessor.run(flightData);
     // stateMachine.update(flightData);
+
+    //Registra os dados e envia-os via LoRa
     sd.log(flightData);
     lora.update(flightData);
 
     //Essa linha é para debugar o sistema, em modo de operação ela deve estar comentada
-    dataPrint.printFlightData(flightData);
+    //dataPrint.printFlightData(flightData);
 
     //Padroniza o tempo de loop, para que todos sensores tenham a mesma quantidade de leituras
     uint32_t elapsed = millis() - cycleStart;

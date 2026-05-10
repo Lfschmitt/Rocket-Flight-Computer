@@ -8,7 +8,7 @@ bool BMP280::init() {
     if (!_sensor.begin(BMP280_ADDR)) {
         return false;
     }
-    //Define a configuração inicial do sensor (Standart)
+    //Define a configuração inicial do sensor (Standard)
     _sensor.setSampling(
         Adafruit_BMP280::MODE_NORMAL,
         Adafruit_BMP280::SAMPLING_X2,   // temperatura
@@ -29,9 +29,16 @@ bool BMP280::init() {
 }
 //Função para ler e armazenar os dados no FlightData
 bool BMP280::read(FlightData& data) {
+    //Le a pressão e a temperatura
     data.pressure    = _sensor.readPressure();
     data.temperature = _sensor.readTemperature();
+
+    //Retorna false se os valores forem absurdos
+    if(data.pressure <= 0.0f || data.temperature <= -30.0f)
+        return false;
+
     // Altitude relativa ao ponto de lançamento
-    data.altitude    = 44330.0f * (1.0f - pow(data.pressure / _referencePressure, 0.1903f));
+    // Utilizando a Equação Barométrica Hipsométrica
+    data.altitude = 44330.0f * (1.0f - pow(data.pressure / _referencePressure, 0.1903f));
     return true;
 }

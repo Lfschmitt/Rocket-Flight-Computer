@@ -49,19 +49,19 @@ bool SDCARD::write(){
     // Pscreve no SD usando os dados locais.
     // _spiMutex garante que o LoRa não usa o barramento SPI ao mesmo tempo.
     if(xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(5))){
-        dataFile.print(localData.timestamp); dataFile.print(", ");
-        dataFile.print(localData.altitude); dataFile.print(", ");
-        dataFile.print(localData.pressure); dataFile.print(", ");
-        dataFile.print(localData.temperature); dataFile.print(", ");
-        dataFile.print(localData.accel.x); dataFile.print(", ");
-        dataFile.print(localData.accel.y); dataFile.print(", ");
-        dataFile.print(localData.accel.z); dataFile.print(", ");
-        dataFile.print(localData.gyro.x); dataFile.print(", ");
-        dataFile.print(localData.gyro.y); dataFile.print(", ");
-        dataFile.print(localData.gyro.z); dataFile.print(", ");
-        dataFile.print(localData.latitude); dataFile.print(", ");
-        dataFile.print(localData.longitude); dataFile.print(", ");
-        dataFile.println(localData.satellites);
+        dataFile.print(localData.timestamp); dataFile.print(", ");      //Tempo
+        dataFile.print(localData.altitude); dataFile.print(", ");       //altitude
+        dataFile.print(localData.pressure); dataFile.print(", ");       //pressão
+        dataFile.print(localData.temperature); dataFile.print(", ");    //temperatura
+        dataFile.print(localData.accel.x); dataFile.print(", ");        //accel.x
+        dataFile.print(localData.accel.y); dataFile.print(", ");        //accel.y
+        dataFile.print(localData.accel.z); dataFile.print(", ");        //accel.z
+        dataFile.print(localData.gyro.x); dataFile.print(", ");         //gyro.x
+        dataFile.print(localData.gyro.y); dataFile.print(", ");         //gyro.y
+        dataFile.print(localData.gyro.z); dataFile.print(", ");         //gyro.z
+        dataFile.print(localData.latitude); dataFile.print(", ");       //latitude
+        dataFile.print(localData.longitude); dataFile.print(", ");      //longitude
+        dataFile.println(localData.satellites);                         //Satelites
         dataFile.flush(); // flush dentro do mutex — SD ainda está no barramento SPI aqui
         xSemaphoreGive(_spiMutex);
     }
