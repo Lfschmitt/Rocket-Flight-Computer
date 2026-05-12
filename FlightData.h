@@ -37,5 +37,5 @@ struct FlightData {
     float verticalAccel;      // m/s²
 
     //Status de cada sistema
-    uint8_t systemStatus;
+    uint8_t systemStatus;   
 };

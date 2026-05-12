@@ -14,7 +14,7 @@
 #include "gps/GYGPS.h"
 #include "processing/DataPrint.h"
 #include "processing/SystemMonitor.h"
-//#include "telemetry/LoRa.h"
+#include "telemetry/LoRa.h"
 
 //Cria objetos para os drivers (Sensores)
 BMP280     bmp280;  //Barometro
@@ -55,17 +55,6 @@ void setup() {
     
     // Cria o mutex SPI antes de qualquer módulo que usa o barramento.
     spiMutex = xSemaphoreCreateMutex();
-    
-    // Mantém o CS do LoRa em HIGH enquanto o SD inicializa,
-    // evitando que o LoRa interfira no barramento SPI durante SD.begin()
-    pinMode(LORA_CS, OUTPUT);
-    digitalWrite(LORA_CS, HIGH);
-    //Inicialização do cartão SD
-    if (!sd.init(spiMutex)) {
-        Serial.println("[ERROR] SDCard init failed");
-        //while (true); //Trava o programa
-    }else{Serial.println("[OK] SDCard initialized");}
-    delay(100);
 
     // Mantém o CS do SD em HIGH enquanto o LORA inicializa,
     // evitando que o LoRa interfira no barramento SPI durante SD.begin()
@@ -77,6 +66,17 @@ void setup() {
         Serial.println(lora.getLastError());
         //while (true);
     }else{Serial.println("[OK] LoRa initialized");}
+    
+    // Mantém o CS do LoRa em HIGH enquanto o SD inicializa,
+    // evitando que o LoRa interfira no barramento SPI durante SD.begin()
+    pinMode(LORA_CS, OUTPUT);
+    digitalWrite(LORA_CS, HIGH);
+    //Inicialização do cartão SD
+    if (!sd.init(spiMutex)) {
+        Serial.println("[ERROR] SDCard init failed");
+        //while (true); //Trava o programa
+    }else{Serial.println("[OK] SDCard initialized");}
+    delay(100);
 
     //Inicialização do GYGPS
     if (!gygps.init(Serial2)) {

@@ -9,6 +9,7 @@
 #include "mpu6500/MPU6500.cpp"
 #include "sdcard/SDCard.cpp"
 #include "gps/GYGPS.cpp"
+#include "telemetry/LoRa.cpp"
 
 // Descomente conforme os módulos forem ativados:
 // #include "processing/DataProcessor.cpp"
