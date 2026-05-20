@@ -50,6 +50,7 @@ bool SDCARD::write(){
     // _spiMutex garante que o LoRa não usa o barramento SPI ao mesmo tempo.
     if(xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(5))){
         dataFile.print(localData.timestamp); dataFile.print(", ");      //Tempo
+        dataFile.print(localData.systemStatus); dataFile.print(", ");   //Status do sistema
         dataFile.print(localData.altitude); dataFile.print(", ");       //altitude
         dataFile.print(localData.pressure); dataFile.print(", ");       //pressão
         dataFile.print(localData.temperature); dataFile.print(", ");    //temperatura

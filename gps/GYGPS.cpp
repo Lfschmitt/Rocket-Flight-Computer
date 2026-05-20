@@ -24,7 +24,9 @@ void GYGPS::read(FlightData& data){
             data.gpsHDOP = _gygps.hdop.hdop();
         if(_gygps.satellites.isValid())
             data.satellites = _gygps.satellites.value();
+        return true;
     } else {
         data.gpsFix = false;
+        return false;
     }
 }

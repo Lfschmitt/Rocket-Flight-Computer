@@ -24,7 +24,9 @@ bool MPU6500::init(){
 bool MPU6500::read(FlightData& data){
     xyzFloat a = _sensor.getGValues()   - referenceAccel;
     xyzFloat g = _sensor.getGyrValues() - referenceGyro;
-    data.accel = {a.x, a.y, a.z + 1};
-    data.gyro  = {g.x, g.y, g.z};  
+    if(isnan(a.x) || isnan(a.y) || isnan(a.z) || isnan(g.x) || isnan(g.y) || isnan(g.z))
+        return false;
+    data.accel = {a.x, a.y, a.z};
+    data.gyro  = {g.x, g.y, g.z};
     return true;
 }

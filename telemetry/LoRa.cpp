@@ -76,11 +76,13 @@ void LORAMODULE::update(const FlightData& data) {
 
     // Transmite 1 vez a cada 13 ciclos (130ms a 100Hz = ~7 pacotes por segundo)
     // Na maioria dos ciclos o update() termina aqui em menos de 1 microsegundo
-    if ((_txCounter++ % 13) != 0) return;
+    if ((_txCounter++ % 13) != 0) 
+        return false;
 
     // Guarda de segurança: rádio ainda ocupado com o pacote anterior
     // Não deve ocorrer em condições normais (130ms > 40ms tempo no ar)
-    if (_txBusy) return;
+    if (_txBusy) 
+        return false;
 
     // Preenche _packet[16] com os 4 campos definidos
     _buildPacket(data);
@@ -97,6 +99,8 @@ void LORAMODULE::update(const FlightData& data) {
             _txBusy = true; // aguarda ISR sinalizar quando terminar
     }
     // Se não conseguiu o mutex em 5ms, pula este ciclo silenciosamente
+
+    return true;
 }
 
 void LORAMODULE::_buildPacket(const FlightData& d) {

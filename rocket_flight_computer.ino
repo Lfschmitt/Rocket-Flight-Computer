@@ -100,18 +100,18 @@ void loop() {
     while(Serial2.available()>0){
         gygps.feed(Serial2.read());
     }
-    gygps.read(flightData);
+    bool gps_status = gygps.read(flightData);
 
     // dataProcessor.run(flightData);
     // stateMachine.update(flightData);
 
     //Registra os dados e envia-os via LoRa
     bool sd_status = sd.log(flightData);
-    lora.update(flightData);
+    bool lora_status = lora.update(flightData);
 
     //Essa linha é para debugar o sistema, em modo de operação ela deve estar comentada
     //dataPrint.printFlightData(flightData);
-    //monitor.update(flightData, bmp_status, mpu_status, 1, sd_status, 1);
+    monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, 1);
 
     //Padroniza o tempo de loop, para que todos sensores tenham a mesma quantidade de leituras
     uint32_t elapsed = millis() - cycleStart;
