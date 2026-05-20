@@ -11,7 +11,7 @@ void GYGPS::feed(uint8_t byte){
     _gygps.encode(byte);
 }
 
-void GYGPS::read(FlightData& data){
+bool GYGPS::read(FlightData& data){
     if(_gygps.location.isValid()){
         data.gpsFix = true;
         data.latitude  = _gygps.location.lat();

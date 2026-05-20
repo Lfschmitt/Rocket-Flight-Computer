@@ -67,7 +67,7 @@ bool LORAMODULE::init(SemaphoreHandle_t spiMutex) {
     return false;
 }
 
-void LORAMODULE::update(const FlightData& data) {
+bool LORAMODULE::update(const FlightData& data) {
     // ISR sinalizou que o envio anterior terminou — limpa os flags para liberar o próximo envio
     if (_txBusy && _txDone) {
         _txBusy = false;

@@ -14,8 +14,7 @@
 // Descomente conforme os módulos forem ativados:
 // #include "processing/DataProcessor.cpp"
 // #include "processing/ApogeeDetector.cpp"
-#include "telemetry/LoRa.cpp"
 
 #include "processing/DataPrint.cpp"
-//#include "processing/SystemMonitor.cpp"
+#include "processing/SystemMonitor.cpp"
 // #include "state/StateMachine.cpp"

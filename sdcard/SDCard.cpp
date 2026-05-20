@@ -11,7 +11,7 @@ bool SDCARD::init(SemaphoreHandle_t spiMutex){
     if(!dataFile)
         return false;
         
-    dataFile.println("timestamp altitude pressure temperature accelx accely accelz gyrox gyroy gyroz lat lng sats"); //Cria o cabeçalho
+    dataFile.println("timestamp status altitude pressure temperature accelx accely accelz gyrox gyroy gyroz lat lng sats"); //Cria o cabeçalho
 
     // Recebe o spiMutex criado no .ino — o mesmo ponteiro é passado para o LoRa,
     // garantindo que SD e LoRa nunca usem o barramento SPI ao mesmo tempo

@@ -26,7 +26,7 @@ SDCARD sd;
 LORAMODULE lora;
 //Cria objetos para arquivos de processamento
 DataPrint  dataPrint(Serial);
-//SystemMonitor monitor;
+SystemMonitor monitor;
 //Cria objeto para o arquivo de dados de voo
 FlightData flightData;
 // Mutex compartilhado entre SD e LoRa para proteger o barramento SPI.

@@ -9,14 +9,15 @@ class LORAMODULE {
         // Inicializa o rádio SX1276 com frequência, SF, BW e CR definidos no .cpp.
         // Recebe o spiMutex compartilhado com o SDCard para proteger o barramento SPI.
         bool init(SemaphoreHandle_t spiMutex);
-
+        
+        // Chamado a cada ciclo do loop principal (100Hz).
+        // Internamente decide se é hora de transmitir com base no _txCounter.
+        bool update(const FlightData& data);
+        
         // Retorna o código de erro RadioLib da última tentativa de init().
         // Chamar só após init() retornar false para diagnosticar o motivo da falha.
         int getLastError() const { return _lastError; }
 
-        // Chamado a cada ciclo do loop principal (100Hz).
-        // Internamente decide se é hora de transmitir com base no _txCounter.
-        void update(const FlightData& data);
 
     private:
         // Objeto RadioLib que representa o chip SX1276 fisicamente soldado no Heltec.

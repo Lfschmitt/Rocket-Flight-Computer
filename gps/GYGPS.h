@@ -6,7 +6,7 @@ class GYGPS{
     public:
         bool init(HardwareSerial& serial);
         void feed(uint8_t byte);
-        void read(FlightData& data);
+        bool read(FlightData& data);
     private:
         TinyGPSPlus _gygps;
         HardwareSerial* _serial;
