@@ -1,32 +1,30 @@
 #include "MPU6500.h"
 #include "../config.h"
 
-bool MPU6500::init(){
-    //Retorna falso se o sensor não foi encontrado
-    if(!_sensor.init()) return false;
+bool MPU6500::init() {
+    MPU9250Setting setting;
+    setting.accel_fs_sel     = ACCEL_FS_SEL::A16G;
+    setting.gyro_fs_sel      = GYRO_FS_SEL::G500DPS;
+    setting.gyro_dlpf_cfg    = GYRO_DLPF_CFG::DLPF_10HZ;
+    setting.accel_dlpf_cfg   = ACCEL_DLPF_CFG::DLPF_10HZ;
+    setting.fifo_sample_rate = FIFO_SAMPLE_RATE::SMPL_125HZ;
 
-    _sensor.autoOffsets();                                 //Selecionar fonte de clock estável (PLL do giroscópio) ou setClockToGyro()
-    _sensor.setAccRange(MPU6500_ACC_RANGE);                //Configurar range do acelerômetro ±16g para suportar aceleração de motor
-    _sensor.setGyrRange(MPU6500_GYR_RANGE);                //Configurar range do giroscópio ±500 deg/s dependendo da rotação esperada
-    _sensor.setGyrDLPF(MPU6500_DLPF);                      //Configurar filtro digital (DLPF), reduz ruído de alta frequência (vibração do motor) ~5Hz de corte
-    _sensor.setSampleRateDivider(MPU6500_SAMPLE_RATE_DIV); //Configurar sample rate divider (derivado de 1kHz), SMPLRT_DIV=9 → 100Hz, coerente com LOOP_RATE_HZ
-    //Média de amostras para calibrar o sensor
-    for (int i = 0; i < MPU6500_CALIBRATION_SAMPLES; i++) {
-        referenceAccel += _sensor.getGValues();
-        referenceGyro  += _sensor.getGyrValues();
-        delay(10);
-    }
-    referenceAccel /= MPU6500_CALIBRATION_SAMPLES;
-    referenceGyro /= MPU6500_CALIBRATION_SAMPLES;
+    if (!_sensor.setup(MPU9250_ADDR, setting)) return false;
+    _sensor.calibrateAccelGyro();
     return true;
 }
 
-bool MPU6500::read(FlightData& data){
-    xyzFloat a = _sensor.getGValues()   - referenceAccel;
-    xyzFloat g = _sensor.getGyrValues() - referenceGyro;
-    if(isnan(a.x) || isnan(a.y) || isnan(a.z) || isnan(g.x) || isnan(g.y) || isnan(g.z))
+bool MPU6500::read(FlightData& data) {
+    if (!_sensor.update()) return false;
+    float ax = _sensor.getAccX();
+    float ay = _sensor.getAccY();
+    float az = _sensor.getAccZ();
+    float gx = _sensor.getGyroX();
+    float gy = _sensor.getGyroY();
+    float gz = _sensor.getGyroZ();
+    if (isnan(ax) || isnan(ay) || isnan(az) || isnan(gx) || isnan(gy) || isnan(gz))
         return false;
-    data.accel = {a.x, a.y, a.z};
-    data.gyro  = {g.x, g.y, g.z};
+    data.accel = {ax, ay, az};
+    data.gyro  = {gx, gy, gz};
     return true;
 }

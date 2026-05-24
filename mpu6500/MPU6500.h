@@ -1,18 +1,13 @@
-#pragma once                        //Inclue esse arquivo apenas uma vez
-#include <MPU6500_WE.h>             //Biblioteca para ler o sensor MPU6500
+#pragma once
+#include <MPU9250.h>
 #include "../FlightData.h"
-#include "../config.h"              
+#include "../config.h"
 
-//Cria a classe MPU6500
 class MPU6500 {
-    //Cria as funções publicas para a main acessar
     public:
-        bool init();                    //Retorna true(Inicializou corretamente) ou false(Não inicializou)
-        bool read(FlightData& data);    
+        bool init();
+        bool read(FlightData& data);
 
-    //Cria as funções privadas para o acessar
     private:
-        xyzFloat referenceAccel;
-        xyzFloat referenceGyro;
-        MPU6500_WE _sensor = MPU6500_WE(MPU6500_ADDR);        
+        MPU9250 _sensor;
 };

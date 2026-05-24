@@ -5,25 +5,26 @@
 //Função inicializadora do sensor
 bool BMP280::init() {
     //Verifica se o endereço do sensor foi encontrado
-    if (!_sensor.begin(BMP280_ADDR)) {
+    if (!_sensor.begin(BME280_ADDR)) {
         return false;
     }
     //Define a configuração inicial do sensor (Standard)
     _sensor.setSampling(
-        Adafruit_BMP280::MODE_NORMAL,
-        Adafruit_BMP280::SAMPLING_X2,   // temperatura
-        Adafruit_BMP280::SAMPLING_X16,  // pressão
-        Adafruit_BMP280::FILTER_X16,
-        Adafruit_BMP280::STANDBY_MS_1
+        Adafruit_BME280::MODE_NORMAL,
+        Adafruit_BME280::SAMPLING_X2,   // temperatura
+        Adafruit_BME280::SAMPLING_X16,  // pressão
+        Adafruit_BME280::SAMPLING_X1,   // umidade
+        Adafruit_BME280::FILTER_X16,
+        Adafruit_BME280::STANDBY_MS_0_5
     );
 
     // Média de amostras para pressão de referência do solo
     float sum = 0;
-    for (int i = 0; i < BMP280_CALIBRATION_SAMPLES; i++) {
+    for (int i = 0; i < BME280_CALIBRATION_SAMPLES; i++) {
         sum += _sensor.readPressure();
         delay(10);
     }
-    _referencePressure = sum / BMP280_CALIBRATION_SAMPLES;
+    _referencePressure = sum / BME280_CALIBRATION_SAMPLES;
     //Retorna que o sensor foi inicializado corretamente
     return true;
 }
