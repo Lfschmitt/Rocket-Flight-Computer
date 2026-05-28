@@ -1,7 +1,11 @@
 //Esse arquivo é para declarar todas as funções que o sensor BMP280 faz
+//O projeto foi idealizado com o BMP280, porém é a mesma lógica e pinagem para o BME280
+//que era o sensor que estava disponível no momento
 #pragma once                        //Inclue esse arquivo apenas uma vez
 #include <Adafruit_BME280.h>        //Biblioteca para ler o sensor BME280
 #include "../FlightData.h"          //Necessário para incluir o objeto FlightData
+#include "../config.h"  //Busca as configurações do hardware
+#include <Arduino.h>
 
 //Cria a classe BMP280
 class BMP280 {
