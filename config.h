@@ -26,8 +26,8 @@
 #define BME280_CALIBRATION_SAMPLES  50  //Amostras para fazer a calibração inicial
 
 //MPU9250
-#define MPU9250_ADDR 0x68                       //Endereço do sensor MPU9250
-#define ELECTRONIC_DISTANCE_FOR_CENTER 1        //Distância do acelerômetro ao centro de massa do foguete
+#define MPU9250_ADDR 0x68               //Endereço do sensor MPU9250
+#define MPU9250_CALIBRATION_SAMPLES 50  //Amostras para fazer a calibração inicial 
 
 //GYGPS6MV2
 #define PIN_RX_GPS  36      //Pino RX do ESP32 que conecta no TX do GPS
@@ -35,7 +35,7 @@
 #define GPS_BAUD    9600    //Velocidade padrão do NEO-6M
 
 // Loop principal
-#define LOOP_RATE_HZ   100           //Default 100Hz
+#define LOOP_RATE_HZ   50   //Default 50Hz
 #define LOOP_PERIOD_MS (1000 / LOOP_RATE_HZ)
 
 //Definição do bit de cada sistema

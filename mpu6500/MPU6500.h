@@ -19,4 +19,6 @@ class MPU6500 {
     //Cria as funções privadas para o sensor acessar
     private:
         MPU9250 _sensor;                //Cria o objeto do sensor MPU9250
+        float _refAx = 0, _refAy = 0, _refAz = 0;  //Referência do acelerômetro
+        float _refGx = 0, _refGy = 0, _refGz = 0;  //Referência do giroscópio
 };
