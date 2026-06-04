@@ -28,8 +28,8 @@ class LORAMODULE {
         // Mesmo mutex passado para o SDCard — garante acesso exclusivo ao barramento SPI.
         SemaphoreHandle_t _spiMutex;
 
-        // Buffer de 16 bytes: timestamp (4) + latitude (4) + longitude (4) + altitude (4)
-        uint8_t _packet[16];
+        // Buffer de 17 bytes: timestamp (4) + latitude (4) + longitude (4) + altitude (4) + systemStatus (1)
+        uint8_t _packet[17];
 
         // Conta os ciclos do loop. A transmissão ocorre quando _txCounter % 13 == 0,
         // ou seja, a cada 130ms (13 ciclos × 10ms), resultando em ~7 pacotes por segundo.

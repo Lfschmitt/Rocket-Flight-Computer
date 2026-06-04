@@ -92,7 +92,7 @@ bool LORAMODULE::update(const FlightData& data) {
     if (xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(5))) {
         // startTransmit() faz apenas escritas de registro (~100µs) e retorna imediatamente
         // O rádio transmite os 16 bytes no ar sozinho, sem ocupar a CPU
-        int state = _radio.startTransmit(_packet, 16);
+        int state = _radio.startTransmit(_packet, 17);
         xSemaphoreGive(_spiMutex); // SPI livre imediatamente após iniciar o envio
 
         if (state == RADIOLIB_ERR_NONE)
@@ -104,10 +104,11 @@ bool LORAMODULE::update(const FlightData& data) {
 }
 
 void LORAMODULE::_buildPacket(const FlightData& d) {
-    _writeU32(_packet,  0, d.timestamp);  // ms desde o boot
-    _writeF32(_packet,  4, d.latitude);   // graus decimais
-    _writeF32(_packet,  8, d.longitude);  // graus decimais
-    _writeF32(_packet, 12, d.altitude);   // metros acima do ponto de lançamento
+    _writeU32(_packet,  0, d.timestamp);     // ms desde o boot
+    _writeF32(_packet,  4, d.latitude);      // graus decimais
+    _writeF32(_packet,  8, d.longitude);     // graus decimais
+    _writeF32(_packet, 12, d.gpsAltitude);   // metros acima do ponto de lançamento
+    _packet[16] = d.systemStatus;            // bitmask de status dos sistemas
 }
 
 // Escreve 4 bytes de uint32_t no offset (o) do buffer (b)

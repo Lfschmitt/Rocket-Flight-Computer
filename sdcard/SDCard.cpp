@@ -12,7 +12,7 @@ bool SDCARD::init(SemaphoreHandle_t spiMutex){
     if(!dataFile)
         return false;
         
-    dataFile.println("timestamp status altitude pressure temperature accelx accely accelz gyrox gyroy gyroz lat lng sats"); //Cria o cabeçalho
+    dataFile.println("timestamp status altitude pressure temperature accelx accely accelz gyrox gyroy gyroz lat lng gpsAlt sats"); //Cria o cabeçalho
 
     // Recebe o spiMutex criado no .ino — o mesmo ponteiro é passado para o LoRa,
     // garantindo que SD e LoRa nunca usem o barramento SPI ao mesmo tempo
@@ -63,6 +63,7 @@ bool SDCARD::write(){
         dataFile.print(localData.gyro.z); dataFile.print(", ");         //gyro.z
         dataFile.print(localData.latitude); dataFile.print(", ");       //latitude
         dataFile.print(localData.longitude); dataFile.print(", ");      //longitude
+        dataFile.print(localData.gpsAltitude); dataFile.print(", ");    //Gps Altitude
         dataFile.println(localData.satellites);                         //Satelites
         dataFile.flush(); // flush dentro do mutex — SD ainda está no barramento SPI aqui
         xSemaphoreGive(_spiMutex);
