@@ -6,8 +6,9 @@ bool SDCARD::init(SemaphoreHandle_t spiMutex){
     //Testa se o cartão SD está conectado
     if(!SD.begin(PIN_SD_CS))
         return false;
-    //Cria o arquivo do zero (FILE_WRITE) para registras as informações
-    dataFile = SD.open("/flightData.txt", FILE_WRITE);
+
+    //Abre o arquivo (FILE_APPEND) para registras as informações, caso não exista então ele cria
+    dataFile = SD.open("/flightData.txt", FILE_APPEND);
     if(!dataFile)
         return false;
         

@@ -86,7 +86,6 @@ void setup() {
 
     //Tudo certo para prosseguir o sistema
     Serial.println("[OK] Flight computer ready");
-    delay(1000);
 }
 
 void loop() {
@@ -110,7 +109,7 @@ void loop() {
     bool lora_status = lora.update(flightData);
 
     //Essa linha é para debugar o sistema, em modo de operação ela deve estar comentada
-    dataPrint.printFlightData(flightData);
+    //dataPrint.printFlightData(flightData);
     monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, 1);
 
     //Padroniza o tempo de loop, para que todos sensores tenham a mesma quantidade de leituras

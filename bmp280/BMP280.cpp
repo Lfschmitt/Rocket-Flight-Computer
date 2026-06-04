@@ -1,6 +1,4 @@
 #include "BMP280.h"     //Inclue o objeto sensor
-#include "../config.h"  //Busca as configurações do hardware
-#include <Arduino.h>
 
 //Função inicializadora do sensor
 bool BMP280::init() {
