@@ -5,6 +5,8 @@
 
 #pragma once
 
+//Led 
+#define PIN_LED 32
 // I2C
 #define PIN_SDA  21
 #define PIN_SCL  22
