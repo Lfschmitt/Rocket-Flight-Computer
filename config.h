@@ -32,12 +32,12 @@
 #define MPU9250_CALIBRATION_SAMPLES 50  //Amostras para fazer a calibração inicial 
 
 //GYGPS6MV2
-#define PIN_RX_GPS  36      //Pino RX do ESP32 que conecta no TX do GPS
+#define PIN_RX_GPS  25      //Pino RX do ESP32 que conecta no TX do GPS
 #define PIN_TX_GPS  17      //Pino TX do Esp32 que conecta no RX do GPS
 #define GPS_BAUD    9600    //Velocidade padrão do NEO-6M
 
 // Loop principal
-#define LOOP_RATE_HZ   50   //Default 50Hz
+#define LOOP_RATE_HZ   1   //Default 50Hz
 #define LOOP_PERIOD_MS (1000 / LOOP_RATE_HZ)
 
 //Definição do bit de cada sistema

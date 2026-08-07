@@ -75,12 +75,13 @@ void setup() {
     pinMode(LORA_CS, OUTPUT);
     digitalWrite(LORA_CS, HIGH);
     //Inicialização do cartão SD
+    /*
     if (!sd.init(spiMutex)) {
         Serial.println("[ERROR] SDCard init failed");
         //while (true); //Trava o programa
     }else{Serial.println("[OK] SDCard initialized");}
     delay(100);
-
+    */
     //Inicialização do GYGPS
     if (!gygps.init(Serial2)) {
         Serial.println("[ERROR] GPS init failed");
@@ -111,13 +112,13 @@ void loop() {
     // stateMachine.update(flightData);
 
     //Registra os dados e envia-os via LoRa
-    bool sd_status = sd.log(flightData);
+    //bool sd_status = sd.log(flightData);
     bool lora_status = lora.update(flightData);
 
     //Essa linha é para debugar o sistema, em modo de operação ela deve estar comentada
-    //dataPrint.printFlightData(flightData);
+    dataPrint.printFlightData(flightData);
     
-    monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, 1);
+    //monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, 1);
 
     //Padroniza o tempo de loop, para que todos sensores tenham a mesma quantidade de leituras
     uint32_t elapsed = millis() - cycleStart;
