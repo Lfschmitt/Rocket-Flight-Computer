@@ -106,19 +106,19 @@ Todos os módulos leem e escrevem na estrutura central `FlightData`:
 | Campo | Descrição | Unidade |
 |---|---|---|
 | `timestamp` | Tempo desde o boot | ms |
-| `bmp_altitude` | Altitude barométrica (relativa ao solo) | m |
-| `bmp_pressure` | Pressão absoluta | Pa |
-| `bmp_temperature` | Temperatura | °C |
-| `mpu_accel_x/y/z` | Aceleração (delta da referência) | g |
-| `mpu_gyro_x/y/z` | Velocidade angular (delta da referência) | °/s |
-| `gps_lat / gps_lng` | Coordenadas geográficas | ° |
-| `gps_altitude` | Altitude GPS | m |
-| `gps_speed` | Velocidade GPS | km/h |
-| `gps_hdop` | Precisão horizontal | — |
-| `gps_satellites` | Satélites visíveis | — |
-| `gps_fix` | Status do fix GPS | bool |
+| `altitude` | Altitude barométrica (relativa ao solo) | m |
+| `pressure` | Pressão absoluta | Pa |
+| `temperature` | Temperatura | °C |
+| `accel.x/y/z` | Aceleração (valor bruto do sensor) | g |
+| `gyro.x/y/z` | Velocidade angular (delta da referência) | °/s |
+| `latitude / longitude` | Coordenadas geográficas | ° |
+| `gpsAltitude` | Altitude GPS | m |
+| `gpsSpeed` | Velocidade GPS | m/s |
+| `gpsHDOP` | Precisão horizontal | — |
+| `satellites` | Satélites visíveis | — |
+| `gpsFix` | Status do fix GPS | bool |
 | `verticalVelocity` | Velocidade vertical calculada | m/s |
-| `verticalAcceleration` | Aceleração vertical calculada | m/s² |
+| `verticalAccel` | Aceleração vertical calculada | m/s² |
 | `systemStatus` | Bitmask de status dos módulos | — |
 
 ### Status dos Módulos (bitmask)
@@ -142,7 +142,7 @@ Todos os módulos leem e escrevem na estrutura central `FlightData`:
 | Bandwidth | 500 kHz |
 | Coding Rate | 4/5 |
 | Potência TX | 17 dBm (~50 mW) |
-| Tamanho do pacote | 16 bytes (timestamp, lat, lng, altitude) |
+| Tamanho do pacote | 17 bytes (timestamp, lat, lng, altitude, systemStatus) |
 | Taxa de transmissão | ~7 pacotes/s (a cada 130 ms) |
 
 ---
@@ -151,7 +151,7 @@ Todos os módulos leem e escrevem na estrutura central `FlightData`:
 
 Na inicialização, o sistema coleta **50 amostras** de referência para:
 - **BMP280**: estabelece pressão de referência ao nível do solo
-- **MPU6500**: calibra offsets do acelerômetro e giroscópio
+- **MPU6500**: calibra offset do giroscópio (o acelerômetro não passa por calibração de offset — os valores lidos são brutos)
 
 O DLPF do MPU6500 é configurado em **10 Hz** para filtrar vibrações do motor.
 
@@ -161,8 +161,8 @@ O DLPF do MPU6500 é configurado em **10 Hz** para filtrar vibrações do motor.
 
 | Biblioteca | Uso |
 |---|---|
-| `Adafruit_BMP280` | Driver do barômetro BMP280 |
-| `MPU6500_WE` | Driver do IMU MPU6500 |
+| `Adafruit_BME280` | Driver do barômetro (sensor BME280, substituto de hardware do BMP280 — mesma lógica e pinagem, classe mantida como `BMP280`) |
+| `MPU9250` | Driver do IMU (sensor MPU9250, substituto de hardware do MPU6500 — mesma lógica e pinagem, classe mantida como `MPU6500`) |
 | `TinyGPSPlus` | Parser NMEA para GPS u-blox |
 | `RadioLib` | Driver LoRa SX1276 |
 | `SD` | Acesso ao cartão SD (built-in ESP32) |
@@ -173,7 +173,7 @@ O DLPF do MPU6500 é configurado em **10 Hz** para filtrar vibrações do motor.
 ### Instalação via Arduino IDE
 
 1. Abrir **Ferramentas → Gerenciar Bibliotecas**
-2. Instalar: `Adafruit BMP280`, `MPU6500_WE`, `TinyGPSPlus`, `RadioLib`
+2. Instalar: `Adafruit BME280`, `MPU9250`, `TinyGPSPlus`, `RadioLib`
 3. Selecionar a placa **ESP32 Dev Module** (ou Heltec WiFi LoRa 32)
 
 ---
