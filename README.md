@@ -1,6 +1,6 @@
 # Rocket Flight Computer — Meteora (Missão Gorilla)
 
-Computador de voo embarcado para o foguete **Meteora**, desenvolvido para a missão **Gorilla** com alcance de 1 km de altitude. O sistema realiza leitura de sensores a 100 Hz, telemetria sem fio via LoRa e registro de dados em cartão SD durante todo o voo.
+Computador de voo embarcado para o foguete **Meteora**, desenvolvido para a missão **Gorilla** com alcance de 1 km de altitude. O sistema realiza leitura de sensores a 50 Hz, telemetria sem fio via LoRa e registro de dados em cartão SD durante todo o voo.
 
 ---
 
@@ -9,8 +9,8 @@ Computador de voo embarcado para o foguete **Meteora**, desenvolvido para a miss
 | Parâmetro | Valor |
 |---|---|
 | Microcontrolador | ESP32 (dual-core) |
-| Frequência do loop principal | 100 Hz |
-| Transmissão LoRa | ~7 pacotes/s @ 915 MHz |
+| Frequência do loop principal | 50 Hz |
+| Transmissão LoRa | ~3.8 pacotes/s @ 915 MHz |
 | Registro de dados | CSV em cartão SD |
 | Altitude alvo | ~1 km |
 
@@ -43,12 +43,12 @@ GPS          → UART2
 O firmware utiliza **Arduino + FreeRTOS** no ESP32 com modelo dual-core:
 
 ```
-Core 1 — Loop Principal (100 Hz)
+Core 1 — Loop Principal (50 Hz)
 ├── Leitura BMP280 (altitude, pressão, temperatura)
 ├── Leitura MPU6500 (aceleração, giração)
 ├── Leitura GPS (posição, velocidade, HDOP)
 ├── SDCard.log()     → atualiza buffer compartilhado
-└── LoRa.update()    → transmite pacote a cada 130 ms
+└── LoRa.update()    → transmite pacote a cada 260 ms
 
 Core 0 — Task FreeRTOS (SDCard)
 └── writeTask()      → grava dados do buffer no arquivo CSV
@@ -92,9 +92,6 @@ rocket_flight_computer/
 └── processing/
     ├── DataPrint.h / .cpp       # Saída serial formatada (debug)
     ├── SystemMonitor.h / .cpp   # Monitoramento de status dos módulos
-    ├── DataProcessor.h / .cpp   # [em desenvolvimento]
-    ├── ApogeeDetector.h / .cpp  # [em desenvolvimento]
-    └── StateMachine.h / .cpp    # [em desenvolvimento]
 ```
 
 ---
@@ -143,7 +140,7 @@ Todos os módulos leem e escrevem na estrutura central `FlightData`:
 | Coding Rate | 4/5 |
 | Potência TX | 17 dBm (~50 mW) |
 | Tamanho do pacote | 17 bytes (timestamp, lat, lng, altitude, systemStatus) |
-| Taxa de transmissão | ~7 pacotes/s (a cada 130 ms) |
+| Taxa de transmissão | ~3.8 pacotes/s (a cada 260 ms) |
 
 ---
 
@@ -202,5 +199,5 @@ Os seguintes módulos estão estruturados mas ainda não implementados:
 
 ## Autores
 
-Desenvolvido por **Volkswangen T30** e **Claudio**  
+Desenvolvido por **Volkswangen T30**
 Equipe de foguetemodelismo — Missão Gorilla / Foguete Meteora
