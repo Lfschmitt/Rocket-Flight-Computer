@@ -10,11 +10,5 @@
 #include "sdcard/SDCard.cpp"
 #include "gps/GYGPS.cpp"
 #include "telemetry/LoRa.cpp"
-
-// Descomente conforme os módulos forem ativados:
-// #include "processing/DataProcessor.cpp"
-// #include "processing/ApogeeDetector.cpp"
-
 #include "processing/DataPrint.cpp"
 #include "processing/SystemMonitor.cpp"
-// #include "state/StateMachine.cpp"

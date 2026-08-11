@@ -1,6 +1,7 @@
 #include "DataPrint.h"
 
 bool DataPrint::printFlightData(FlightData& data) {
+    
     _out.println("=== FLIGHT DATA ===");
     _out.print("Time:       "); _out.print(data.timestamp / 1000.0, 2); _out.println(" s");
     _out.println();
@@ -10,7 +11,6 @@ bool DataPrint::printFlightData(FlightData& data) {
     _out.print("Pressure:   "); _out.print(data.pressure/1000, 2); _out.println(" kPa");
     _out.print("Temp:       "); _out.print(data.temperature,   2); _out.println(" C");
     _out.println();
-
     _out.println("[MPU6500]");
     _out.print("Accel   X: "); _out.print(data.accel.x, 2);
     _out.print(" g    Y: ");   _out.print(data.accel.y, 2);
@@ -31,7 +31,7 @@ bool DataPrint::printFlightData(FlightData& data) {
         _out.print(",");
         _out.println(data.longitude, 6);
     }
-
     _out.println("===================");
+    
     return true;
 }
