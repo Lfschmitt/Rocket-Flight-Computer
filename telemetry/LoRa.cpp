@@ -42,8 +42,10 @@ bool LORAMODULE::init(SemaphoreHandle_t spiMutex) {
         }else{
             state = -99;
         }
-        _lastError = state;
 
+        //Código para testar a inicialização do Lora, utilizado para detectar de ocorria uma queda
+        //de tensão na inicialização da placa
+        /*_lastError = state;
         if (state == RADIOLIB_ERR_NONE) {
             if (attempt > 1) {
                 Serial.print("[OK] LoRa inicializado na tentativa ");
@@ -62,7 +64,7 @@ bool LORAMODULE::init(SemaphoreHandle_t spiMutex) {
         Serial.print(" falhou — state=");
         Serial.println(state);
 
-        if (attempt < MAX_TRIES) delay(200);
+        if (attempt < MAX_TRIES) delay(200);*/
     }
     return false;
 }
@@ -74,23 +76,24 @@ bool LORAMODULE::update(const FlightData& data) {
         _txDone = false;
     }
 
-    // Transmite 1 vez a cada 13 ciclos (130ms a 100Hz = ~7 pacotes por segundo)
-    // Na maioria dos ciclos o update() termina aqui em menos de 1 microsegundo
-    if ((_txCounter++ % 13) != 0) 
+    // Transmite 1 vez a cada 10 ciclos, como cada ciclo tem 20ms, cada pacote é enviado
+    // a cada 200ms ~5 pacotes por segundo
+    // Na maioria dos ciclos o update() termina aqui em microsegundos
+    if ((_txCounter++ % 10) != 0) 
         return false;
 
     // Guarda de segurança: rádio ainda ocupado com o pacote anterior
-    // Não deve ocorrer em condições normais (130ms > 40ms tempo no ar)
+    // Não deve ocorrer em condições normais (200ms > 40ms tempo no ar)
     if (_txBusy) 
         return false;
 
-    // Preenche _packet[16] com os 4 campos definidos
+    // Preenche _packet[17] com os 4 campos definidos e 1 byte para o sistem monitor
     _buildPacket(data);
 
     // Tenta adquirir o barramento SPI por até 5ms
     // O SDCard segura o SPI por menos de 1ms, então 5ms é mais que suficiente
     if (xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(5))) {
-        // startTransmit() faz apenas escritas de registro (~100µs) e retorna imediatamente
+        // startTransmit() faz apenas escritas de registro e retorna imediatamente
         // O rádio transmite os 16 bytes no ar sozinho, sem ocupar a CPU
         int state = _radio.startTransmit(_packet, 17);
         xSemaphoreGive(_spiMutex); // SPI livre imediatamente após iniciar o envio
@@ -104,11 +107,13 @@ bool LORAMODULE::update(const FlightData& data) {
 }
 
 void LORAMODULE::_buildPacket(const FlightData& d) {
-    _writeU32(_packet,  0, d.timestamp);     // ms desde o boot
-    _writeF32(_packet,  4, d.latitude);      // graus decimais
-    _writeF32(_packet,  8, d.longitude);     // graus decimais
-    _writeF32(_packet, 12, d.gpsAltitude);   // metros acima do ponto de lançamento
-    _packet[16] = d.systemStatus;            // bitmask de status dos sistemas
+    //Constrói um array de bytes que será o pacote enviado
+    int offset = 0;
+    _writeU32(_packet, offset, d.timestamp);    offset += 4; // ms desde o boot
+    _writeF32(_packet, offset, d.latitude);     offset += 4; // graus decimais
+    _writeF32(_packet, offset, d.longitude);    offset += 4; // graus decimais
+    _writeF32(_packet, offset, d.gpsAltitude);  offset += 4; // metros acima do ponto de lançamento
+    _packet[offset] = d.systemStatus;                        // bitmask de status dos sistemas
 }
 
 // Escreve 4 bytes de uint32_t no offset (o) do buffer (b)
