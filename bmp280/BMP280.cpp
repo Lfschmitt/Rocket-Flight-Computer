@@ -23,15 +23,20 @@ bool BMP280::init() {
         delay(10);
     }
     _referencePressure = sum / BME280_CALIBRATION_SAMPLES;
+    _lastSample = _referencePressure;
     //Retorna que o sensor foi inicializado corretamente
     return true;
 }
 //Função para ler e armazenar os dados no FlightData
 bool BMP280::read(FlightData& data) {
-    //Le a pressão e a temperatura
-    data.pressure    = _sensor.readPressure();
+    //Le a pressão e ajusta com a média ponderada da última medida
+    float rawPressure = _sensor.readPressure();
+    data.pressure = BME280_SENSIBILITY * rawPressure + (1.0f - BME280_SENSIBILITY) * _lastSample;
+    _lastSample = data.pressure;
+    
+    //Le a temperatura
     data.temperature = _sensor.readTemperature();
-
+    
     //Retorna false se os valores forem absurdos
     if(data.pressure <= 0.0f || data.temperature <= -30.0f)
         return false;

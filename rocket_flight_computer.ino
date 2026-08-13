@@ -37,7 +37,7 @@ void setup() {
     Serial.begin(115200);           //inicializa o monitor serial
     Wire.begin(PIN_SDA, PIN_SCL);   //Inicializa a comunicaçao I2C
     
-    pinMode(PIN_LED, OUTPUT);
+    pinMode(PIN_LED, OUTPUT);       //Acende o Led indicando que o setup começou
     digitalWrite(PIN_LED, HIGH);
 
     //Inicialização do sensor BMP280(Barômetro)
@@ -108,9 +108,6 @@ void loop() {
     }
     bool gps_status = gygps.read(flightData);
 
-    // dataProcessor.run(flightData);
-    // stateMachine.update(flightData);
-
     //Registra os dados e envia-os via LoRa
     //bool sd_status = sd.log(flightData);
     bool lora_status = lora.update(flightData);
@@ -118,7 +115,7 @@ void loop() {
     //Essa linha é para debugar o sistema, em modo de operação ela deve estar comentada
     dataPrint.printFlightData(flightData);
     
-    //monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, 1);
+    //monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, lora_status);
 
     //Padroniza o tempo de loop, para que todos sensores tenham a mesma quantidade de leituras
     uint32_t elapsed = millis() - cycleStart;

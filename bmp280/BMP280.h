@@ -18,4 +18,5 @@ class BMP280 {
     private:
         Adafruit_BME280 _sensor;        //Cria o objeto do sensor BME280
         float _referencePressure;       //Variável que armazena a pressão inicial do lançamento
+        float _lastSample;              //Variável que registra a ultima leitura
 };
