@@ -7,7 +7,7 @@ bool SDCARD::init(SemaphoreHandle_t spiMutex){
     if(!SD.begin(PIN_SD_CS))
         return false;
 
-    //Abre o arquivo (FILE_APPEND) para registras as informações, caso não exista então ele cria
+    //Abre o arquivo (FILE_APPEND) para registrar as informações, caso não exista então ele cria
     dataFile = SD.open("/flightData.txt", FILE_APPEND);
     if(!dataFile)
         return true;
@@ -28,7 +28,7 @@ bool SDCARD::init(SemaphoreHandle_t spiMutex){
 }
 
 bool SDCARD::log(const FlightData& data){
-    // Tenta adquirir o mutex; portMAX_DELAY = espera indefinidamente até conseguir
+    // Tenta adquirir o mutex por até 5ms; se não conseguir, descarta esta amostra
     // Impede que log() e write() acessem lastData ao mesmo tempo em núcleos diferentes
     if(xSemaphoreTake(_dataMutex, pdMS_TO_TICKS(5))){
         lastData = data;
@@ -49,7 +49,7 @@ bool SDCARD::write(){
         xSemaphoreGive(_dataMutex);
     }
     
-    // Pscreve no SD usando os dados locais.
+    // Escreve no SD usando os dados locais.
     // _spiMutex garante que o LoRa não usa o barramento SPI ao mesmo tempo.
     if(xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(5))){
         dataFile.print(localData.timestamp); dataFile.print(", ");      //Tempo
@@ -78,10 +78,10 @@ void SDCARD::writeTask(void* param) {
     // param é o "this" que passado no xTaskCreatePinnedToCore
     // cast de void* para SDCARD* para ter acesso aos membros da classe
     SDCARD* self = (SDCARD*) param;
-    //vTaskDelay(10000); //Espera os sistemas inicializarem antes de escrever
     // loop infinito — a task nunca retorna
     while (true) {
         self->write();  // chama write() na instância correta
-        vTaskDelay(15); // Sincroniza a frequancia de escrita com a frequancia do loop principal
+        vTaskDelay(15); // ~15ms entre escritas, um pouco mais rápido que os 20ms do loop
+                        // principal, garantindo que nenhuma amostra fique presa no buffer
     }
 }

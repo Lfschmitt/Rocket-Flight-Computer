@@ -31,7 +31,7 @@ bool LORAMODULE::init(SemaphoreHandle_t spiMutex) {
         if(xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(500))){
             state = _radio.begin(
                 LORA_FREQ,  // 915.0 MHz — faixa ISM do Brasil (definido em config.h)
-                500.0,      // bandwidth 500 kHz — reduz tempo no ar (~72ms para 44 bytes)
+                500.0,      // bandwidth 500 kHz — reduz tempo no ar (~51ms para 17 bytes)
                 9,          // spreading factor 9 — alcance ~4km com boa velocidade
                 5,          // coding rate 4/5 — mínima redundância, SF já garante robustez
                 0x12,       // sync word — "senha" da rede; receptor precisa do mesmo valor
@@ -83,7 +83,7 @@ bool LORAMODULE::update(const FlightData& data) {
         return false;
 
     // Guarda de segurança: rádio ainda ocupado com o pacote anterior
-    // Não deve ocorrer em condições normais (200ms > 40ms tempo no ar)
+    // Não deve ocorrer em condições normais (200ms > 51ms tempo no ar)
     if (_txBusy) 
         return false;
 
@@ -94,7 +94,7 @@ bool LORAMODULE::update(const FlightData& data) {
     // O SDCard segura o SPI por menos de 1ms, então 5ms é mais que suficiente
     if (xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(5))) {
         // startTransmit() faz apenas escritas de registro e retorna imediatamente
-        // O rádio transmite os 16 bytes no ar sozinho, sem ocupar a CPU
+        // O rádio transmite os 17 bytes no ar sozinho, sem ocupar a CPU
         int state = _radio.startTransmit(_packet, 17);
         xSemaphoreGive(_spiMutex); // SPI livre imediatamente após iniciar o envio
 
@@ -112,7 +112,7 @@ void LORAMODULE::_buildPacket(const FlightData& d) {
     _writeU32(_packet, offset, d.timestamp);    offset += 4; // ms desde o boot
     _writeF32(_packet, offset, d.latitude);     offset += 4; // graus decimais
     _writeF32(_packet, offset, d.longitude);    offset += 4; // graus decimais
-    _writeF32(_packet, offset, d.gpsAltitude);  offset += 4; // metros acima do ponto de lançamento
+    _writeF32(_packet, offset, d.gpsAltitude);  offset += 4; // metros acima do nível do mar (altitude do GPS)
     _packet[offset] = d.systemStatus;                        // bitmask de status dos sistemas
 }
 // Escreve 4 bytes de uint32_t no offset (o) do buffer (b)

@@ -10,7 +10,7 @@ class LORAMODULE {
         // Recebe o spiMutex compartilhado com o SDCard para proteger o barramento SPI.
         bool init(SemaphoreHandle_t spiMutex);
         
-        // Chamado a cada ciclo do loop principal (100Hz).
+        // Chamado a cada ciclo do loop principal (50Hz).
         // Internamente decide se é hora de transmitir com base no _txCounter.
         bool update(const FlightData& data);
         
@@ -31,8 +31,8 @@ class LORAMODULE {
         // Buffer de 17 bytes: timestamp (4) + latitude (4) + longitude (4) + altitude (4) + systemStatus (1)
         uint8_t _packet[17];
 
-        // Conta os ciclos do loop. A transmissão ocorre quando _txCounter % 13 == 0,
-        // ou seja, a cada 130ms (13 ciclos × 10ms), resultando em ~7 pacotes por segundo.
+        // Conta os ciclos do loop. A transmissão ocorre quando _txCounter % 10 == 0,
+        // ou seja, a cada 200ms (10 ciclos × 20ms), resultando em 5 pacotes por segundo.
         uint16_t _txCounter = 0;
 
         // Impedindo disparar um novo envio antes do anterior terminar.
@@ -53,7 +53,7 @@ class LORAMODULE {
         // static: mesmo motivo do _txDone acima.
         static void IRAM_ATTR _onTxDone();
 
-        // Serializa timestamp, latitude, longitude e altitude no buffer _packet[16].
+        // Serializa timestamp, latitude, longitude, altitude GPS e systemStatus no buffer _packet[17].
         void _buildPacket(const FlightData& data);
 
         // Helpers de serialização: escrevem um valor no offset (o) dentro do buffer (b).

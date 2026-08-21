@@ -26,13 +26,13 @@
 // BME280
 #define BME280_ADDR 0x77                //Endereço do sensor BME280
 #define BME280_CALIBRATION_SAMPLES  50  //Amostras para fazer a calibração inicial
-#define BME280_SENSIBILITY 0.95          //Quanto da leitrua registrada é referente a uma nova leitura
+#define BME280_SENSIBILITY 0.95          //Peso da nova leitura na média móvel (1.0 = sem filtro)
 
 //MPU9250
 #define MPU9250_ADDR 0x68               //Endereço do sensor MPU9250
 #define MPU9250_CALIBRATION_SAMPLES 50  //Amostras para fazer a calibração inicial
-#define MPU_ACCEL_SENSIBILITY 0.95       //Quanto da leitrua registrada é referente a uma nova leitura
-#define MPU_GYRO_SENSIBILITY 0.9       //Quanto da leitrua registrada é referente a uma nova leitura 
+#define MPU_ACCEL_SENSIBILITY 0.95       //Peso da nova leitura na média móvel (1.0 = sem filtro)
+#define MPU_GYRO_SENSIBILITY 0.9         //Peso da nova leitura na média móvel (1.0 = sem filtro)
 
 //GYGPS6MV2
 #define PIN_RX_GPS  25      //Pino RX do ESP32 que conecta no TX do GPS

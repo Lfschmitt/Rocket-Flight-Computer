@@ -19,8 +19,7 @@ class MPU6500 {
     //Cria as funções privadas para o sensor acessar
     private:
         MPU9250 _sensor;                //Cria o objeto do sensor MPU9250
-        float _refAx = 0, _refAy = 0, _refAz = 0;  //Referência do acelerômetro
-        float _refGx = 0, _refGy = 0, _refGz = 0;  //Referência do giroscópio
-        float _lastAx, _lastAy, _lastAz;            //Variável que registra a ultima leitura
-        float _lastGx, _lastGy, _lastGz;            //Variável que registra a ultima leitura
+        float _refGx = 0, _refGy = 0, _refGz = 0;  //Offset do giroscópio medido em repouso no init()
+        float _lastAx, _lastAy, _lastAz;            //Última leitura do acelerômetro (média móvel)
+        float _lastGx, _lastGy, _lastGz;            //Última leitura do giroscópio (média móvel)
 };

@@ -14,7 +14,8 @@ bool MPU6500::init() {
     if (!_sensor.setup(MPU9250_ADDR, setting))
         return false;
 
-    // Média de amostras para referência em repouso
+    // Média de amostras para referência do giroscópio em repouso
+    // O acelerômetro não passa por calibração de offset
     float sGx = 0, sGy = 0, sGz = 0;
     for (int i = 0; i < MPU9250_CALIBRATION_SAMPLES; i++) {
         _sensor.update();
@@ -41,7 +42,7 @@ bool MPU6500::read(FlightData& data) {
     if (!_sensor.update()) 
         return false;
 
-    //Lê os dados do acelerômetro e do giroscópio descontando a referência em repouso
+    //Lê o acelerômetro em valores brutos e o giroscópio descontando a referência em repouso
     float ax = _sensor.getAccX();
     float ay = _sensor.getAccY();
     float az = _sensor.getAccZ();

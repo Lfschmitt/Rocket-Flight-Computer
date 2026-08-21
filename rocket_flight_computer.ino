@@ -68,8 +68,8 @@ void setup() {
     // Cria o mutex SPI antes de qualquer módulo que usa o barramento.
     spiMutex = xSemaphoreCreateMutex();
 
-    // Mantém o CS do SD em HIGH enquanto o LORA inicializa,
-    // evitando que o LoRa interfira no barramento SPI durante SD.begin()
+    // Mantém o CS do SD em HIGH enquanto o LoRa inicializa,
+    // evitando que o cartão SD interfira no barramento SPI durante lora.init()
     pinMode(PIN_SD_CS, OUTPUT);
     digitalWrite(PIN_SD_CS, HIGH);
     //Inicialização do módulo LoRa

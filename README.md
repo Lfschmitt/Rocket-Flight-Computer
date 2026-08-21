@@ -8,10 +8,10 @@ Computador de voo embarcado para o foguete **Meteora**, desenvolvido para a miss
 
 | Parâmetro | Valor |
 |---|---|
-| Microcontrolador | ESP32 (dual-core) |
-| Frequência do loop principal | 50 Hz |
-| Transmissão LoRa | ~3.8 pacotes/s @ 915 MHz |
-| Registro de dados | CSV em cartão SD |
+| Microcontrolador | ESP32 (Heltec WiFi LoRa 32) |
+| Frequência do loop principal | 50 Hz (período de 20 ms) |
+| Transmissão LoRa | 5 pacotes/s @ 915 MHz |
+| Registro de dados | `/flightData.txt` no cartão SD (valores separados por vírgula) |
 | Altitude alvo | ~1 km |
 
 ---
@@ -21,8 +21,8 @@ Computador de voo embarcado para o foguete **Meteora**, desenvolvido para a miss
 | Módulo | Componente | Interface |
 |---|---|---|
 | Microcontrolador | ESP32 (Heltec) | — |
-| Barômetro | BMP280 | I2C (0x77) |
-| IMU (acelerômetro + giroscópio) | MPU6500 | I2C (0x68) |
+| Barômetro | BME280 | I2C (0x77) |
+| IMU (acelerômetro + giroscópio) | MPU9250 | I2C (0x68) |
 | GPS | u-blox NEO-6M | UART2 (9600 baud) |
 | Rádio LoRa | SX1276 | SPI |
 | Armazenamento | Cartão SD | SPI |
@@ -30,10 +30,12 @@ Computador de voo embarcado para o foguete **Meteora**, desenvolvido para a miss
 ### Pinagem (config.h)
 
 ```
-I2C          → SDA: 21 | SCL: 22
-SD Card      → CS: (definido em config.h), barramento SPI compartilhado
-LoRa SX1276  → CS/DIO0/RST: (definido em config.h), barramento SPI compartilhado
-GPS          → UART2
+LED de status → 32
+I2C           → SDA: 21 | SCL: 22
+SPI (SD+LoRa) → SCK: 5 | MISO: 19 | MOSI: 27
+SD Card       → CS: 13
+LoRa SX1276   → CS: 18 | RST: 14 | DIO0: 26
+GPS (UART2)   → RX do ESP32: 25 | TX do ESP32: 17
 ```
 
 ---
@@ -43,25 +45,28 @@ GPS          → UART2
 O firmware utiliza **Arduino + FreeRTOS** no ESP32 com modelo dual-core:
 
 ```
-Core 1 — Loop Principal (50 Hz)
-├── Leitura BMP280 (altitude, pressão, temperatura)
-├── Leitura MPU6500 (aceleração, giração)
-├── Leitura GPS (posição, velocidade, HDOP)
-├── SDCard.log()     → atualiza buffer compartilhado
-└── LoRa.update()    → transmite pacote a cada 260 ms
+Core 1 — Loop Principal (50 Hz / 20 ms)
+├── BMP280.read()         → altitude, pressão, temperatura
+├── MPU6500.read()        → aceleração e giroscópio
+├── GYGPS.feed/read()     → posição, velocidade, HDOP, satélites
+├── SDCard.log()          → copia FlightData para o buffer compartilhado
+├── LoRa.update()         → transmite 1 pacote a cada 10 ciclos (200 ms)
+└── SystemMonitor.update()→ consolida o bitmask de status
 
 Core 0 — Task FreeRTOS (SDCard)
-└── writeTask()      → grava dados do buffer no arquivo CSV
+└── writeTask()           → grava o buffer no arquivo a cada ~15 ms
 ```
 
 ### Sincronização SPI
 
-O cartão SD e o rádio LoRa compartilham o mesmo barramento SPI. O acesso é coordenado por um **mutex FreeRTOS** (`spiMutex`) criado no `setup()` e passado para ambos os módulos, evitando corrupção de dados.
+O cartão SD e o rádio LoRa compartilham o mesmo barramento SPI. O acesso é coordenado por um **mutex FreeRTOS** (`spiMutex`) criado no `setup()` e passado para ambos os módulos, evitando corrupção de dados. Cada lado tenta tomar o mutex com timeout de 5 ms e pula o ciclo caso não consiga.
 
 ```
-spiMutex ──→ SDCard  (writeTask, Core 0)
-         └──→ LoRa    (transmit, Core 1)
+spiMutex ──→ SDCard  (write(), Core 0)
+         └──→ LoRa    (startTransmit(), Core 1)
 ```
+
+O SDCard mantém ainda um segundo mutex interno (`_dataMutex`) que protege o buffer `lastData` entre o `log()` (Core 1) e o `write()` (Core 0).
 
 ---
 
@@ -75,23 +80,23 @@ rocket_flight_computer/
 ├── modules.cpp                  # Agregador de compilação (Arduino IDE)
 │
 ├── bmp280/
-│   ├── BMP280.h / .cpp          # Barômetro — altitude, pressão, temperatura
+│   └── BMP280.h / .cpp          # Barômetro — altitude, pressão, temperatura
 │
 ├── mpu6500/
-│   ├── MPU6500.h / .cpp         # IMU 6 eixos — aceleração e giroscópio
+│   └── MPU6500.h / .cpp         # IMU 6 eixos — aceleração e giroscópio
 │
 ├── gps/
-│   ├── GYGPS.h / .cpp           # GPS u-blox NEO-6M via TinyGPSPlus
+│   └── GYGPS.h / .cpp           # GPS u-blox NEO-6M via TinyGPSPlus
 │
 ├── sdcard/
-│   ├── SDCard.h / .cpp          # Registro CSV em SD — task dedicada no Core 0
+│   └── SDCard.h / .cpp          # Registro em SD — task dedicada no Core 0
 │
 ├── telemetry/
-│   ├── LoRa.h / .cpp            # Telemetria SX1276 @ 915 MHz via RadioLib
+│   └── LoRa.h / .cpp            # Telemetria SX1276 @ 915 MHz via RadioLib
 │
 └── processing/
     ├── DataPrint.h / .cpp       # Saída serial formatada (debug)
-    ├── SystemMonitor.h / .cpp   # Monitoramento de status dos módulos
+    └── SystemMonitor.h / .cpp   # Bitmask de status dos módulos
 ```
 
 ---
@@ -103,30 +108,44 @@ Todos os módulos leem e escrevem na estrutura central `FlightData`:
 | Campo | Descrição | Unidade |
 |---|---|---|
 | `timestamp` | Tempo desde o boot | ms |
-| `altitude` | Altitude barométrica (relativa ao solo) | m |
-| `pressure` | Pressão absoluta | Pa |
+| `altitude` | Altitude barométrica (relativa ao ponto de lançamento) | m |
+| `pressure` | Pressão absoluta (filtrada) | Pa |
 | `temperature` | Temperatura | °C |
-| `accel.x/y/z` | Aceleração (valor bruto do sensor) | g |
-| `gyro.x/y/z` | Velocidade angular (delta da referência) | °/s |
+| `accel.x/y/z` | Aceleração (filtrada, sem offset) | g |
+| `gyro.x/y/z` | Velocidade angular (offset da calibração descontado) | °/s |
 | `latitude / longitude` | Coordenadas geográficas | ° |
-| `gpsAltitude` | Altitude GPS | m |
+| `gpsAltitude` | Altitude GPS (acima do nível do mar) | m |
 | `gpsSpeed` | Velocidade GPS | m/s |
-| `gpsHDOP` | Precisão horizontal | — |
+| `gpsHDOP` | Precisão horizontal (<2 excelente, >5 ruim) | — |
 | `satellites` | Satélites visíveis | — |
 | `gpsFix` | Status do fix GPS | bool |
-| `verticalVelocity` | Velocidade vertical calculada | m/s |
-| `verticalAccel` | Aceleração vertical calculada | m/s² |
 | `systemStatus` | Bitmask de status dos módulos | — |
 
 ### Status dos Módulos (bitmask)
 
-| Bit | Módulo |
-|---|---|
-| 0 | BMP280 |
-| 1 | MPU6500 |
-| 2 | GPS |
-| 3 | SD Card |
-| 4 | LoRa |
+| Bit | Máscara | Módulo |
+|---|---|---|
+| 0 | `SYS_BMP` (0x01) | BMP280 / BME280 |
+| 1 | `SYS_MPU` (0x02) | MPU6500 / MPU9250 |
+| 2 | `SYS_GPS` (0x04) | GPS |
+| 3 | `SYS_SD` (0x08) | Cartão SD |
+| 4 | `SYS_LORA` (0x10) | LoRa |
+
+O bitmask é reconstruído a cada ciclo do loop a partir do retorno de cada `read()` / `log()`, ou seja, reflete o estado **da leitura atual**, não apenas o resultado do `setup()`.
+
+---
+
+## Registro em Cartão SD
+
+O arquivo `/flightData.txt` é aberto em modo `FILE_APPEND` e recebe uma linha por ciclo de escrita, com os campos separados por vírgula, nesta ordem:
+
+```
+timestamp, systemStatus, altitude, pressure, temperature,
+accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z,
+latitude, longitude, gpsAltitude, satellites
+```
+
+A gravação roda em uma task FreeRTOS fixada no **Core 0** (`sdWriteTask`, stack 4096, prioridade 1), com `vTaskDelay(15)` entre escritas.
 
 ---
 
@@ -134,23 +153,47 @@ Todos os módulos leem e escrevem na estrutura central `FlightData`:
 
 | Parâmetro | Valor |
 |---|---|
-| Frequência | 915.0 MHz |
+| Frequência | 915.0 MHz (faixa ISM liberada no Brasil) |
 | Spreading Factor | SF9 |
 | Bandwidth | 500 kHz |
 | Coding Rate | 4/5 |
+| Sync word | 0x12 |
+| Preâmbulo | 8 símbolos |
 | Potência TX | 17 dBm (~50 mW) |
-| Tamanho do pacote | 17 bytes (timestamp, lat, lng, altitude, systemStatus) |
-| Taxa de transmissão | ~3.8 pacotes/s (a cada 260 ms) |
+| Tamanho do pacote | 17 bytes |
+| Tempo no ar | ~51 ms |
+| Taxa de transmissão | 5 pacotes/s (a cada 200 ms / 10 ciclos) |
+
+### Formato do pacote (17 bytes, little-endian)
+
+| Offset | Tamanho | Campo |
+|---|---|---|
+| 0 | 4 | `timestamp` (uint32, ms desde o boot) |
+| 4 | 4 | `latitude` (float, graus decimais) |
+| 8 | 4 | `longitude` (float, graus decimais) |
+| 12 | 4 | `gpsAltitude` (float, m acima do nível do mar) |
+| 16 | 1 | `systemStatus` (bitmask) |
+
+A transmissão é assíncrona: `startTransmit()` retorna imediatamente e o fim do envio é sinalizado por interrupção no pino DIO0. O `init()` tenta inicializar o rádio até **3 vezes** com 200 ms de intervalo, e `getLastError()` devolve o código RadioLib da última falha.
 
 ---
 
-## Calibração
+## Calibração e Filtragem
 
-Na inicialização, o sistema coleta **50 amostras** de referência para:
-- **BMP280**: estabelece pressão de referência ao nível do solo
-- **MPU6500**: calibra offset do giroscópio (o acelerômetro não passa por calibração de offset — os valores lidos são brutos)
+Na inicialização:
 
-O DLPF do MPU6500 é configurado em **10 Hz** para filtrar vibrações do motor.
+- **BME280**: média de **50 amostras** de pressão define a referência do nível do solo; a altitude sai da equação hipsométrica. Sampling: temperatura ×2, pressão ×16, umidade ×1, filtro IIR ×16, standby 0,5 ms.
+- **MPU9250**: média de **50 amostras** calibra o offset do **giroscópio**. O acelerômetro **não** passa por calibração de offset — os valores são brutos. Escalas: ±16 g e ±500 °/s, FIFO a 125 Hz.
+
+Em voo, todas as leituras passam por uma média móvel exponencial cujos pesos ficam em `config.h`:
+
+| Constante | Valor | Aplicação |
+|---|---|---|
+| `BME280_SENSIBILITY` | 0.95 | pressão |
+| `MPU_ACCEL_SENSIBILITY` | 0.95 | aceleração |
+| `MPU_GYRO_SENSIBILITY` | 0.9 | giroscópio |
+
+O DLPF do MPU9250 (acelerômetro e giroscópio) é configurado em **10 Hz** para filtrar vibrações do motor.
 
 ---
 
@@ -185,19 +228,13 @@ O DLPF do MPU6500 é configurado em **10 Hz** para filtrar vibrações do motor.
 
 > **Nota**: O arquivo `modules.cpp` é um agregador necessário para que o Arduino IDE compile corretamente os módulos em subpastas. Não remova este arquivo.
 
----
+### Debug
 
-## Módulos em Desenvolvimento
-
-Os seguintes módulos estão estruturados mas ainda não implementados:
-
-- **DataProcessor** — processamento de dados em voo (velocidade e aceleração vertical)
-- **ApogeeDetector** — detecção do apogeu com base em dados barométricos e IMU
-- **StateMachine** — máquina de estados do voo (pré-lançamento → motor ativo → planagem → apogeu → descida → pousado)
+A impressão formatada no monitor serial (115200 baud) fica desligada por padrão. Para ativar, descomente a chamada de `dataPrint.printFlightData(flightData)` no `loop()` — em voo ela deve permanecer comentada, pois consome tempo do ciclo.
 
 ---
 
 ## Autores
 
 Desenvolvido por **Volkswangen T30**
-Equipe de foguetemodelismo — Missão Gorilla / Foguete Meteora
+Equipe ITA Rocket Design — Missão Gorilla / Foguete Meteora
