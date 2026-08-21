@@ -45,7 +45,7 @@ bool LORAMODULE::init(SemaphoreHandle_t spiMutex) {
 
         //Código para testar a inicialização do Lora, utilizado para detectar de ocorria uma queda
         //de tensão na inicialização da placa
-        /*_lastError = state;
+        _lastError = state;
         if (state == RADIOLIB_ERR_NONE) {
             if (attempt > 1) {
                 Serial.print("[OK] LoRa inicializado na tentativa ");
@@ -64,7 +64,7 @@ bool LORAMODULE::init(SemaphoreHandle_t spiMutex) {
         Serial.print(" falhou — state=");
         Serial.println(state);
 
-        if (attempt < MAX_TRIES) delay(200);*/
+        if (attempt < MAX_TRIES) delay(200);
     }
     return false;
 }
@@ -115,9 +115,7 @@ void LORAMODULE::_buildPacket(const FlightData& d) {
     _writeF32(_packet, offset, d.gpsAltitude);  offset += 4; // metros acima do ponto de lançamento
     _packet[offset] = d.systemStatus;                        // bitmask de status dos sistemas
 }
-
 // Escreve 4 bytes de uint32_t no offset (o) do buffer (b)
 void LORAMODULE::_writeU32(uint8_t* b, int o, uint32_t v) { memcpy(b + o, &v, 4); }
-
 // Escreve 4 bytes de float no offset (o) do buffer (b)
 void LORAMODULE::_writeF32(uint8_t* b, int o, float    v) { memcpy(b + o, &v, 4); }

@@ -37,18 +37,27 @@ void setup() {
     Serial.begin(115200);           //inicializa o monitor serial
     Wire.begin(PIN_SDA, PIN_SCL);   //Inicializa a comunicaçao I2C
     
+    // ###################################################################### //
+    //Exibe que o sistema começou a funcionar 
     pinMode(PIN_LED, OUTPUT);       //Acende o Led indicando que o setup começou
     digitalWrite(PIN_LED, HIGH);
+    Serial.print("[System] Init system");
+    for(int i = 0; i < 3; i++){
+        digitalWrite(PIN_LED, LOW);
+        Serial.print(".");
+        delay(500);
+        digitalWrite(PIN_LED, HIGH);
+    }
+    Serial.println("");
+    // ###################################################################### //
 
     //Inicialização do sensor BMP280(Barômetro)
     if (!bmp280.init()) { 
         Serial.println("[ERROR] BMP280 init failed"); 
-        //while (true); //Trava o programa
     }else{Serial.println("[OK] BMP280 initialized");}
     //Inicialização do sensor MPU6500(Acelerometro)
     if (!mpu6500.init()) {
         Serial.println("[ERROR] MPU6500 init failed");
-        //while (true); //Trava o programa
     }else{Serial.println("[OK] MPU6500 initialized");}
     
     // Inicializa o barramento SPI uma única vez antes de qualquer módulo SPI.
@@ -67,7 +76,6 @@ void setup() {
     if (!lora.init(spiMutex)) {
         Serial.print("[ERROR] LoRa falhou apos 3 tentativas — state=");
         Serial.println(lora.getLastError());
-        //while (true);
     }else{Serial.println("[OK] LoRa initialized");}
     
     // Mantém o CS do LoRa em HIGH enquanto o SD inicializa,
@@ -75,21 +83,19 @@ void setup() {
     pinMode(LORA_CS, OUTPUT);
     digitalWrite(LORA_CS, HIGH);
     //Inicialização do cartão SD
-    /*
-    if (!sd.init(spiMutex)) {
-        Serial.println("[ERROR] SDCard init failed");
-        //while (true); //Trava o programa
-    }else{Serial.println("[OK] SDCard initialized");}
+    
+    if (sd.init(spiMutex)) {
+        Serial.println("[ERROR] SDCard init failed: Not Begin");
+    }else {Serial.println("[OK] SDCard initialized");}
     delay(100);
-    */
+    
     //Inicialização do GYGPS
     if (!gygps.init(Serial2)) {
         Serial.println("[ERROR] GPS init failed");
-        //while (true); //Trava o programa
     }else{Serial.println("[OK] GPS initialized");}
 
     //Tudo certo para prosseguir o sistema
-    Serial.println("[OK] Flight computer ready");
+    Serial.println("[System] Flight computer ready");
     digitalWrite(PIN_LED, LOW);
     delay(3000);
     digitalWrite(PIN_LED, HIGH);
@@ -107,15 +113,13 @@ void loop() {
         gygps.feed(Serial2.read());
     }
     bool gps_status = gygps.read(flightData);
-
     //Registra os dados e envia-os via LoRa
-    //bool sd_status = sd.log(flightData);
+    bool sd_status = sd.log(flightData);
     bool lora_status = lora.update(flightData);
 
     //Essa linha é para debugar o sistema, em modo de operação ela deve estar comentada
-    dataPrint.printFlightData(flightData);
-    
-    //monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, lora_status);
+    //dataPrint.printFlightData(flightData);
+    monitor.update(flightData, bmp_status, mpu_status, gps_status, sd_status, 1);
 
     //Padroniza o tempo de loop, para que todos sensores tenham a mesma quantidade de leituras
     uint32_t elapsed = millis() - cycleStart;

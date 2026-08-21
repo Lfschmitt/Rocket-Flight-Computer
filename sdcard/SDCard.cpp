@@ -10,7 +10,7 @@ bool SDCARD::init(SemaphoreHandle_t spiMutex){
     //Abre o arquivo (FILE_APPEND) para registras as informações, caso não exista então ele cria
     dataFile = SD.open("/flightData.txt", FILE_APPEND);
     if(!dataFile)
-        return false;
+        return true;
         
     dataFile.println("timestamp status altitude pressure temperature accelx accely accelz gyrox gyroy gyroz lat lng gpsAlt sats"); //Cria o cabeçalho
 
@@ -24,7 +24,7 @@ bool SDCARD::init(SemaphoreHandle_t spiMutex){
     //Cria uma task para processar a escrita no core 0
     xTaskCreatePinnedToCore(writeTask, "sdWriteTask", 4096, this, 1, &sdHandle, 0);
 
-    return true;
+    return false;
 }
 
 bool SDCARD::log(const FlightData& data){
@@ -33,8 +33,10 @@ bool SDCARD::log(const FlightData& data){
     if(xSemaphoreTake(_dataMutex, pdMS_TO_TICKS(5))){
         lastData = data;
         xSemaphoreGive(_dataMutex); // Libera o mutex para que o outro núcleo possa acessar lastData
+        return true;
     }
-    return true;
+    
+    return false;
 }
 
 bool SDCARD::write(){
@@ -46,7 +48,7 @@ bool SDCARD::write(){
         localData = lastData;
         xSemaphoreGive(_dataMutex);
     }
-
+    
     // Pscreve no SD usando os dados locais.
     // _spiMutex garante que o LoRa não usa o barramento SPI ao mesmo tempo.
     if(xSemaphoreTake(_spiMutex, pdMS_TO_TICKS(5))){
@@ -68,6 +70,7 @@ bool SDCARD::write(){
         dataFile.flush(); // flush dentro do mutex — SD ainda está no barramento SPI aqui
         xSemaphoreGive(_spiMutex);
     }
+    
     return true;
 }
 
@@ -75,10 +78,10 @@ void SDCARD::writeTask(void* param) {
     // param é o "this" que passado no xTaskCreatePinnedToCore
     // cast de void* para SDCARD* para ter acesso aos membros da classe
     SDCARD* self = (SDCARD*) param;
-
+    //vTaskDelay(10000); //Espera os sistemas inicializarem antes de escrever
     // loop infinito — a task nunca retorna
     while (true) {
         self->write();  // chama write() na instância correta
-        vTaskDelay(1);
+        vTaskDelay(15); // Sincroniza a frequancia de escrita com a frequancia do loop principal
     }
 }

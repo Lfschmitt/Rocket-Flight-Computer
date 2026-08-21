@@ -40,7 +40,7 @@
 #define GPS_BAUD    9600    //Velocidade padrão do NEO-6M
 
 // Loop principal
-#define LOOP_RATE_HZ   50   //Default 50Hz
+#define LOOP_RATE_HZ 50    //Default 50Hz
 #define LOOP_PERIOD_MS (1000 / LOOP_RATE_HZ)
 
 //Definição do bit de cada sistema
